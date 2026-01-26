@@ -1,0 +1,590 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "NoBugs API Banking",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:4111",
+            "description": "Generated server url"
+        }
+    ],
+    "security": [
+        {
+            "BasicAuth": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Accounts",
+            "description": "Manage user accounts"
+        },
+        {
+            "name": "Admin",
+            "description": "Admin management endpoints"
+        },
+        {
+            "name": "Authentication",
+            "description": "User authentication endpoints"
+        },
+        {
+            "name": "Customer",
+            "description": "Customer management endpoints"
+        }
+    ],
+    "paths": {
+        "/api/v1/customer/profile": {
+            "get": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Get customer profile",
+                "description": "Retrieves the authenticated user's profile details.",
+                "operationId": "getCustomerProfile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Update customer profile",
+                "description": "Allows an authenticated user to update their name or password.",
+                "operationId": "updateCustomerProfile",
+                "requestBody": {
+                    "description": "Fields to update",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "string"
+                            },
+                            "examples": {
+                                "UpdateNameExample": {
+                                    "summary": "Example for updating user name",
+                                    "description": "UpdateNameExample",
+                                    "value": {
+                                        "name": "John Smith"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User login",
+                "description": "Authenticate user and return Basic Auth header.",
+                "operationId": "login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get all users",
+                "description": "Allows the admin to retrieve a list of all users.",
+                "operationId": "getAllUsers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Customer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Create a new user",
+                "description": "Allows admin to create a new user with a username and password.",
+                "operationId": "createUser",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Customer"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts": {
+            "post": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Create an account",
+                "description": "Creates a new account for the authenticated user.",
+                "operationId": "createAccount",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Account"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/transfer": {
+            "post": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Transfer money",
+                "description": "Transfers money from one account to another.",
+                "operationId": "transferMoney",
+                "requestBody": {
+                    "description": "Transfer request with sender account, receiver account, and amount",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "object"
+                                }
+                            },
+                            "examples": {
+                                "TransferExample": {
+                                    "summary": "Example transfer request",
+                                    "description": "TransferExample",
+                                    "value": {
+                                        "senderAccountId": 1,
+                                        "receiverAccountId": 2,
+                                        "amount": 250.75
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/deposit": {
+            "post": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Deposit money",
+                "description": "Deposits money into the user's account.",
+                "operationId": "depositMoney",
+                "requestBody": {
+                    "description": "Deposit request with account ID and amount",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "object"
+                                }
+                            },
+                            "examples": {
+                                "DepositExample": {
+                                    "summary": "Example deposit request",
+                                    "description": "DepositExample",
+                                    "value": {
+                                        "id": 1,
+                                        "balance": 100.5
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/customer/accounts": {
+            "get": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Get customer accounts",
+                "description": "Retrieves all accounts belonging to the authenticated user.",
+                "operationId": "getCustomerAccounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{accountId}/transactions": {
+            "get": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Get account transactions",
+                "description": "Retrieve all transactions of the user's account.",
+                "operationId": "getAccountTransactions",
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "description": "ID of the account to retrieve transactions",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/users/{id}": {
+            "delete": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Delete a user by ID",
+                "description": "Allows admin to delete a user by their unique ID.",
+                "operationId": "deleteUserById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "text/plain": {
+                                "examples": {
+                                    "NotFound": {
+                                        "description": "NotFound",
+                                        "value": "Error: User with ID 5 not found."
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "User deleted successfully",
+                        "content": {
+                            "text/plain": {
+                                "examples": {
+                                    "Success": {
+                                        "description": "Success",
+                                        "value": "User with ID 5 deleted successfully."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{accountId}": {
+            "delete": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Delete account",
+                "description": "Deletes an account owned by the authenticated user by its ID.",
+                "operationId": "deleteAccount",
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "description": "ID of the account to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "User or account not found",
+                        "content": {
+                            "text/plain": {
+                                "examples": {
+                                    "NotFound": {
+                                        "description": "NotFound",
+                                        "value": "Account not found"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Account deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "Success": {
+                                        "description": "Success",
+                                        "value": {
+                                            "message": "Account deleted successfully",
+                                            "accountId": 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized access to account",
+                        "content": {
+                            "text/plain": {
+                                "examples": {
+                                    "Forbidden": {
+                                        "description": "Forbidden",
+                                        "value": "Unauthorized access to account"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "required": [
+                    "password",
+                    "username"
+                ],
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "maxLength": 15,
+                        "minLength": 3,
+                        "pattern": "^[\\w\\.\\-]+$",
+                        "type": "string",
+                        "example": "kate1998"
+                    },
+                    "password": {
+                        "maxLength": 2147483647,
+                        "minLength": 8,
+                        "pattern": "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&+=])(?=\\S+$).{8,}$",
+                        "type": "string",
+                        "example": "verysTRongPassword33$"
+                    }
+                }
+            },
+            "Customer": {
+                "required": [
+                    "password",
+                    "username"
+                ],
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "maxLength": 15,
+                        "minLength": 3,
+                        "pattern": "^[\\w\\.\\-]+$",
+                        "type": "string",
+                        "example": "kate1998"
+                    },
+                    "password": {
+                        "pattern": "^(?=\\S+$)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&+=]).{8,}$",
+                        "type": "string",
+                        "example": "verysTRongPassword33$"
+                    },
+                    "role": {
+                        "pattern": "ADMIN|USER",
+                        "type": "string",
+                        "example": "USER"
+                    }
+                }
+            },
+            "Account": {
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic"
+            }
+        }
+    }
+}
