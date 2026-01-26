@@ -8,6 +8,24 @@ Content-Type: application/json
   "password": "kate19981"
 }
 
+### Negative test: Login with invalid username
+POST http://localhost:4111/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "nonexistentuser",
+  "password": "verysTRongPassword33$"
+}
+
+### Negative test: Login with invalid password
+POST http://localhost:4111/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "kate19981",
+  "password": "wrongPassword123$"
+}
+
 ### Positive test: Admin can create new user with correct data
 POST http://localhost:4111/api/v1/admin/users
 Content-Type: application/json
@@ -122,6 +140,16 @@ Authorization: Basic YWRtaW46YWRtaW4=
   "role": "USER"
 }
 
+### Positive test: Delete user by ID
+DELETE http://localhost:4111/api/v1/admin/users/{{userId}}
+Content-Type: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+### Negative test: Delete user by ID - not found
+DELETE http://localhost:4111/api/v1/admin/users/99999
+Content-Type: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
 
 ### Positive test: Authorized user can create account
 POST http://localhost:4111/api/v1/accounts
@@ -132,3 +160,121 @@ Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
 GET http://localhost:4111/api/v1/customer/accounts
 Content-Type: application/json
 Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+### Positive test: Deposit money to account
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "id": 1,
+  "balance": 100
+}
+
+### Negative test: Deposit negative amount
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "id": 1,
+  "balance": -100
+}
+
+### Negative test: Deposit exceeding maximum (5000)
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "id": 1,
+  "balance": 5001
+}
+
+### Positive test: Transfer money between accounts
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 50
+}
+
+### Negative test: Transfer negative amount
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": -50
+}
+
+### Negative test: Transfer exceeding account balance
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 999999
+}
+
+### Positive test: Get account transactions
+GET http://localhost:4111/api/v1/accounts/1/transactions
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+### Positive test: Get customer profile
+GET http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+### Positive test: Update customer profile with valid name
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "name": "John Smith"
+}
+
+### Negative test: Update customer profile with single word
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "name": "John"
+}
+
+### Negative test: Update customer profile with numbers
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "name": "John 123"
+}
+
+### Negative test: Update customer profile with special characters
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "name": "John @#$%"
+}
+
+### Negative test: Update customer profile with empty string
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic a2F0ZTE5OTgxOmthdGUxOTk4MQ==
+
+{
+  "name": ""
+}

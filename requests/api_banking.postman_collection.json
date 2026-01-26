@@ -153,14 +153,7 @@
 							]
 						},
 						"method": "GET",
-						"header": [
-							{
-								"key": "accountId",
-								"value": "1",
-								"type": "text",
-								"disabled": true
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "",
@@ -171,7 +164,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{base-uri}}/api/v1/accounts/{{accountId}}/transactions",
+							"raw": "{{base-uri}}/api/v1/accounts/1/transactions",
 							"host": [
 								"{{base-uri}}"
 							],
@@ -179,15 +172,240 @@
 								"api",
 								"v1",
 								"accounts",
-								"{{accountId}}",
+								"1",
 								"transactions"
-							],
-							"query": [
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deposit money - negative amount",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
 								{
-									"key": "accountId",
-									"value": "1",
-									"disabled": true
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
 								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"balance\": -100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/accounts/deposit",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"deposit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deposit money - exceeding maximum",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"balance\": 5001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/accounts/deposit",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"deposit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Transfer money - negative amount",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 2,\n  \"amount\": -50\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/accounts/transfer",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"transfer"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Transfer money - insufficient balance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 2,\n  \"amount\": 999999\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/accounts/transfer",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"accounts",
+								"transfer"
 							]
 						}
 					},
@@ -283,6 +501,106 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Delete user by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "admin",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base-uri}}/api/v1/admin/users/{{userId}}",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user by ID - not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "admin",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base-uri}}/api/v1/admin/users/99999",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"99999"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -326,6 +644,92 @@
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/auth/login",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - invalid username",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401 or 400\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 400]);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"nonexistentuser\",\n  \"password\": \"verysTRongPassword33$\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/auth/login",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - invalid password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401 or 400\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 400]);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"kate1998\",\n  \"password\": \"wrongPassword123$\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -468,7 +872,239 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Ildar\"\n}",
+							"raw": "{\n  \"name\": \"John Smith\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/customer/profile",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update customer profile - single word",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/customer/profile",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update customer profile - with numbers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John 123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/customer/profile",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update customer profile - with special characters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John @#$%\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base-uri}}/api/v1/customer/profile",
+							"host": [
+								"{{base-uri}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update customer profile - empty string",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "verysTRongPassword33$",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "kate1998",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -496,87 +1132,7 @@
 			"name": "iteration_2",
 			"item": [
 				{
-					"name": "1-Create a new user",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "admin",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"value": "",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"kate1998\",\n  \"password\": \"verysTRongPassword33$\", \n  \"role\": \"USER\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base-uri}}/api/v1/admin/users",
-							"host": [
-								"{{base-uri}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"admin",
-								"users"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "2-User Login",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"kate1998\",\n  \"password\": \"verysTRongPassword33$\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base-uri}}/api/v1/auth/login",
-							"host": [
-								"{{base-uri}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "3-Create an account 1",
+					"name": "Setup - Create an account 1",
 					"request": {
 						"auth": {
 							"type": "basic",
@@ -610,7 +1166,7 @@
 					"response": []
 				},
 				{
-					"name": "4-Create an account 2",
+					"name": "Setup - Create an account 2",
 					"request": {
 						"auth": {
 							"type": "basic",
@@ -818,7 +1374,7 @@
 					"response": []
 				},
 				{
-					"name": "Authorized user cannot deposit money exceeding maximum (5000)[in dev]",
+					"name": "Authorized user cannot deposit money exceeding maximum (5000)",
 					"event": [
 						{
 							"listen": "test",
@@ -934,7 +1490,7 @@
 					"response": []
 				},
 				{
-					"name": "Authorized user cannot transfer money exceeding maximum (10000)[in dev]",
+					"name": "Authorized user cannot transfer money exceeding maximum (10000)",
 					"event": [
 						{
 							"listen": "test",
@@ -1282,7 +1838,7 @@
 					"response": []
 				},
 				{
-					"name": "Authorized user cannot update profile name with single word[in dev]",
+					"name": "Authorized user cannot update profile name with single word",
 					"event": [
 						{
 							"listen": "test",
@@ -1340,7 +1896,7 @@
 					"response": []
 				},
 				{
-					"name": "Authorized user cannot update profile name with numbers[in dev]",
+					"name": "Authorized user cannot update profile name with numbers",
 					"event": [
 						{
 							"listen": "test",
@@ -1398,7 +1954,7 @@
 					"response": []
 				},
 				{
-					"name": "Authorized user cannot update profile name with special characters[in dev]",
+					"name": "Authorized user cannot update profile name with special characters",
 					"event": [
 						{
 							"listen": "test",
@@ -1456,7 +2012,7 @@
 					"response": []
 				},
 				{
-					"name": "Authorized user cannot update profile name with empty string[in dev]",
+					"name": "Authorized user cannot update profile name with empty string",
 					"event": [
 						{
 							"listen": "test",
@@ -1549,14 +2105,7 @@
 							]
 						},
 						"method": "GET",
-						"header": [
-							{
-								"key": "accountId",
-								"value": "1",
-								"type": "text",
-								"disabled": true
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "",
@@ -1567,7 +2116,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{base-uri}}/api/v1/accounts/{{accountId}}/transactions",
+							"raw": "{{base-uri}}/api/v1/accounts/1/transactions",
 							"host": [
 								"{{base-uri}}"
 							],
@@ -1575,15 +2124,8 @@
 								"api",
 								"v1",
 								"accounts",
-								"{{accountId}}",
+								"1",
 								"transactions"
-							],
-							"query": [
-								{
-									"key": "accountId",
-									"value": "1",
-									"disabled": true
-								}
 							]
 						}
 					},
