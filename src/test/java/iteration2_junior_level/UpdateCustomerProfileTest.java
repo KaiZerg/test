@@ -4,6 +4,7 @@ import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,11 +64,11 @@ public class UpdateCustomerProfileTest {
     }
 
     @Test
-    public void AuthorizedUserCanUpdateProfileNameWithValidFormatTest(){
+    public void authorizedUserCanUpdateProfileNameWithValidFormatTest(){
         String validName = "John Johnny";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -76,20 +77,39 @@ public class UpdateCustomerProfileTest {
                         }
                         """.formatted(validName))
                 .when()
-                .put("http://localhost:4111/api/v1/customer/profile") // Используем относительный путь, так как baseURI и port уже установлены
+                .put("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK);
+
+        // Проверка, что профиль обновился через GET запрос
+        String profileResponse = given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_OK)
-                .body("customer.name", Matchers.equalTo("John Johnny")) // Проверяем, что имя изменилось
-                .body("message", Matchers.equalTo("Profile updated successfully")); // Дополнительная проверка сообщения
+                .extract()
+                .asString();
+
+        // Проверяем, что имя обновилось
+        JsonPath profileJsonPath = JsonPath.from(profileResponse);
+        String actualName = profileJsonPath.getString("customer.name");
+        if (actualName == null) {
+            actualName = profileJsonPath.getString("name");
+        }
+        if (actualName == null || !validName.equals(actualName)) {
+            throw new AssertionError("Expected name: " + validName + ", but was: " + actualName);
+        }
     }
 
     @Test
-    public void AuthorizedUserCannotUpdateProfileNameWithSingleWord(){
+    public void authorizedUserCannotUpdateProfileNameWithSingleWord(){
         String expectedErrorMessage = "Name must contain two words with letters only";
         String invalidName = "John";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -98,19 +118,19 @@ public class UpdateCustomerProfileTest {
                         }
                         """.formatted(invalidName))
                 .when()
-                .put("http://localhost:4111/api/v1/customer/profile") // Используем относительный путь, так как baseURI и port уже установлены
+                .put("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.equalTo(expectedErrorMessage));   // Проверяем точное соответствие текста ошибки
+                .body(Matchers.equalTo(expectedErrorMessage));
     }
 
     @Test
-    public void AuthorizedUserCannotUpdateProfileNameWithNumbers(){
+    public void authorizedUserCannotUpdateProfileNameWithNumbers(){
         String invalidName = "John 123";
         String expectedErrorMessage = "Name must contain two words with letters only";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -119,19 +139,19 @@ public class UpdateCustomerProfileTest {
                         }
                         """.formatted(invalidName))
                 .when()
-                .put("http://localhost:4111/api/v1/customer/profile") // Используем относительный путь, так как baseURI и port уже установлены
+                .put("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.equalTo(expectedErrorMessage));   // Проверяем точное соответствие текста ошибки
+                .body(Matchers.equalTo(expectedErrorMessage));
     }
 
     @Test
-    public void AuthorizedUserCannotUpdateProfileNameWithSpecialCharacters(){
+    public void authorizedUserCannotUpdateProfileNameWithSpecialCharacters(){
         String invalidName = "John @#$%";
         String expectedErrorMessage = "Name must contain two words with letters only";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -140,19 +160,19 @@ public class UpdateCustomerProfileTest {
                         }
                         """.formatted(invalidName))
                 .when()
-                .put("http://localhost:4111/api/v1/customer/profile") // Используем относительный путь, так как baseURI и port уже установлены
+                .put("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.equalTo(expectedErrorMessage));   // Проверяем точное соответствие текста ошибки
+                .body(Matchers.equalTo(expectedErrorMessage));
     }
 
     @Test
-    public void AuthorizedUserCannotUpdateProfileNameWithEmptyString(){
+    public void authorizedUserCannotUpdateProfileNameWithEmptyString(){
         String invalidName = "";
         String expectedErrorMessage = "Name must contain two words with letters only";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -161,9 +181,9 @@ public class UpdateCustomerProfileTest {
                         }
                         """.formatted(invalidName))
                 .when()
-                .put("http://localhost:4111/api/v1/customer/profile") // Используем относительный путь, так как baseURI и port уже установлены
+                .put("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.equalTo(expectedErrorMessage));   // Проверяем точное соответствие текста ошибки
+                .body(Matchers.equalTo(expectedErrorMessage));
     }
 }

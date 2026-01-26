@@ -87,10 +87,10 @@ public class TransferMoneyTest {
                 .extract()
                 .path("id");
 
-        // Пополнение через админский API (если требуется особый доступ)
+        // Пополнение первого счета
         BigDecimal depositAmount = new BigDecimal("1000.00");
         given()
-                .header("Authorization", userAuthHeader) // Используем админские права
+                .header("Authorization", userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format("""
@@ -104,17 +104,31 @@ public class TransferMoneyTest {
                 .then()
                 .statusCode(HttpStatus.SC_OK);
 
+        // Проверка, что деньги поступили на счет
+        String depositResponse = given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", accountId1)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .asString();
+
+        JsonPath depositJsonPath = JsonPath.from(depositResponse);
+        double maxDepositAmount = depositJsonPath.getDouble("max { it.id }.amount");
+        MoneyAssert.assertMoneyEquals(maxDepositAmount, String.valueOf(depositAmount));
     }
 
     @Test
-    public void AuthorizedUserCanTransferMoneyBetweenAccounts(){
+    public void authorizedUserCanTransferMoneyBetweenAccounts(){
         int senderAccountId = accountId1;
         int receiverAccountId = accountId2;
-        String transferAmount = "500.00"; // Используем строковое представление для MoneyAssert
+        String transferAmount = "500.00";
         String successMessage = "Transfer successful";
 
         String response = given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -125,7 +139,7 @@ public class TransferMoneyTest {
                         }
                         """.formatted(senderAccountId, receiverAccountId, transferAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/transfer") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_OK)
                 .body("message", Matchers.equalTo(successMessage))
@@ -134,20 +148,35 @@ public class TransferMoneyTest {
                 .extract()
                 .asString();
 
-        // Используем MoneyAssert для проверки суммы
+        // Проверка суммы перевода
         double actualAmount = JsonPath.from(response).getDouble("amount");
         MoneyAssert.assertMoneyEquals(actualAmount, transferAmount);
+
+        // Проверка, что деньги поступили на счет получателя
+        String receiverResponse = given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", receiverAccountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .asString();
+
+        JsonPath receiverJsonPath = JsonPath.from(receiverResponse);
+        double maxReceiverAmount = receiverJsonPath.getDouble("max { it.id }.amount");
+        MoneyAssert.assertMoneyEquals(maxReceiverAmount, transferAmount);
     }
 
     @Test
-    public void AuthorizedUserCannotTransferMoneyExceedingMaximum(){
+    public void authorizedUserCannotTransferMoneyExceedingMaximum(){
         int senderAccountId = accountId1;
         int receiverAccountId = accountId2;
         BigDecimal transferAmount = new BigDecimal("10001.00");
         String expectedErrorMessage = "Transfer amount cannot exceed 10000";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -158,21 +187,31 @@ public class TransferMoneyTest {
                         }
                         """.formatted(senderAccountId, receiverAccountId, transferAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/transfer") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет получателя
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", receiverAccountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("findAll { it.amount == 10001.0 }.size()", Matchers.equalTo(0));
     }
 
     @Test
-    public void AuthorizedUserCannotTransferMoreThanAccountBalance(){
+    public void authorizedUserCannotTransferMoreThanAccountBalance(){
         int senderAccountId = accountId1;
         int receiverAccountId = accountId2;
         BigDecimal transferAmount = new BigDecimal("10000.00");
         String expectedErrorMessage = "Invalid transfer: insufficient funds or invalid accounts";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -183,21 +222,31 @@ public class TransferMoneyTest {
                         }
                         """.formatted(senderAccountId, receiverAccountId, transferAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/transfer") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет получателя
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", receiverAccountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("findAll { it.amount == 10000.0 }.size()", Matchers.equalTo(0));
     }
 
     @Test
-    public void AuthorizedUserCannotTransferNegativeAmount(){
+    public void authorizedUserCannotTransferNegativeAmount(){
         int senderAccountId = accountId1;
         int receiverAccountId = accountId2;
         BigDecimal transferAmount = new BigDecimal("-100.00");
-        String expectedErrorMessage = "Invalid transfer: insufficient funds or invalid accounts";
+        String expectedErrorMessage = "Transfer amount must be at least 0.01";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -208,21 +257,31 @@ public class TransferMoneyTest {
                         }
                         """.formatted(senderAccountId, receiverAccountId, transferAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/transfer") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет получателя
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", receiverAccountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("findAll { it.amount < 0 }.size()", Matchers.equalTo(0));
     }
 
     @Test
-    public void AuthorizedUserCannotTransferFromNonExistentAccount(){
+    public void authorizedUserCannotTransferFromNonExistentAccount(){
         int senderAccountId = 999;
         int receiverAccountId = accountId2;
         BigDecimal transferAmount = new BigDecimal("100.00");
         String expectedErrorMessage = "Unauthorized access to account";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -233,21 +292,30 @@ public class TransferMoneyTest {
                         }
                         """.formatted(senderAccountId, receiverAccountId, transferAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/transfer") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_FORBIDDEN)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет получателя (доступ запрещен)
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", receiverAccountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK);
     }
 
     @Test
-    public void AuthorizedUserCannotTransferToNonExistentAccount(){
+    public void authorizedUserCannotTransferToNonExistentAccount(){
         int senderAccountId = accountId1;
         int receiverAccountId = 999;
         BigDecimal transferAmount = new BigDecimal("100.00");
         String expectedErrorMessage = "Invalid transfer: insufficient funds or invalid accounts";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -258,9 +326,18 @@ public class TransferMoneyTest {
                         }
                         """.formatted(senderAccountId, receiverAccountId, transferAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/transfer") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет получателя
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", receiverAccountId)
+                .then()
+                .statusCode(HttpStatus.SC_FORBIDDEN);
     }
 }

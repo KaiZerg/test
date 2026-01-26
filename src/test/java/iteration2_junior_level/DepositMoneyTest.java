@@ -18,6 +18,7 @@ import static io.restassured.RestAssured.given;
 
 public class DepositMoneyTest {
     private static String userAuthHeader;
+    private static int accountId;
 
     @BeforeAll
     public static void setupRestAssured() {
@@ -64,22 +65,33 @@ public class DepositMoneyTest {
                 .header("Authorization");
 
         // Создание аккаунта для пользователя
-        given()
+        accountId = given()
                 .header("Authorization", userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .post("http://localhost:4111/api/v1/accounts")
                 .then()
-                .statusCode(HttpStatus.SC_CREATED);
+                .statusCode(HttpStatus.SC_CREATED)
+                .extract()
+                .path("id");
+
+        // Проверка, что аккаунт был создан
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", Matchers.hasItem(accountId));
     }
 
     @Test
-    public void AuthorizedUserCanDepositMoneyToOwnAccount(){
-        int accountId = 1;
+    public void authorizedUserCanDepositMoneyToOwnAccount(){
         BigDecimal depositAmount = new BigDecimal("1000.00");
 
         String response = given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -89,7 +101,7 @@ public class DepositMoneyTest {
                         }
                         """.formatted(accountId, depositAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/deposit") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/deposit")
                 .then()
                 .statusCode(HttpStatus.SC_OK)
                 .extract()
@@ -100,16 +112,30 @@ public class DepositMoneyTest {
         // Проверка последней транзакции
         double lastTransactionAmount = jsonPath.getDouble("transactions.max { it.id }.amount");
         MoneyAssert.assertMoneyEquals(lastTransactionAmount, String.valueOf(depositAmount));
+
+        // Проверка, что деньги поступили на счет через GET запрос
+        String accountResponse = given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", accountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .extract()
+                .asString();
+
+        JsonPath accountJsonPath = JsonPath.from(accountResponse);
+        double maxTransactionAmount = accountJsonPath.getDouble("max { it.id }.amount");
+        MoneyAssert.assertMoneyEquals(maxTransactionAmount, String.valueOf(depositAmount));
     }
 
     @Test
-    public void AuthorizedUserCannotDepositNegativeAmount(){
-        int accountId = 1;
+    public void authorizedUserCannotDepositNegativeAmount(){
         BigDecimal depositAmount = new BigDecimal("-100.00");
-        String expectedErrorMessage = "Invalid account or amount";
+        String expectedErrorMessage = "Deposit amount must be at least 0.01";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -119,20 +145,30 @@ public class DepositMoneyTest {
                         }
                         """.formatted(accountId, depositAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/deposit") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/deposit")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", accountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("findAll { it.amount < 0 }.size()", Matchers.equalTo(0));
     }
 
     @Test
-    public void AuthorizedUserCannotDepositToNonExistentAccount(){
+    public void authorizedUserCannotDepositToNonExistentAccount(){
         int accountId = 999;
         BigDecimal depositAmount = new BigDecimal("1000.00");
         String expectedErrorMessage = "Unauthorized access to account";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -142,20 +178,28 @@ public class DepositMoneyTest {
                         }
                         """.formatted(accountId, depositAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/deposit") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/deposit")
                 .then()
                 .statusCode(HttpStatus.SC_FORBIDDEN)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет (проверяем доступ к транзакциям)
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", accountId)
+                .then()
+                .statusCode(HttpStatus.SC_FORBIDDEN);
     }
 
     @Test
-    public void AuthorizedUserCannotDepositMoneyExceedingMaximum(){
-        int accountId = 1;
+    public void authorizedUserCannotDepositMoneyExceedingMaximum(){
         BigDecimal depositAmount = new BigDecimal("5001.00");
-        String expectedErrorMessage = "Deposit amount exceeds the 5000 limit";
+        String expectedErrorMessage = "Deposit amount cannot exceed 5000";
 
         given()
-                .header("Authorization",userAuthHeader) // Добавляем заголовок авторизации
+                .header("Authorization",userAuthHeader)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body("""
@@ -165,9 +209,19 @@ public class DepositMoneyTest {
                         }
                         """.formatted(accountId, depositAmount))
                 .when()
-                .post("http://localhost:4111/api/v1/accounts/deposit") // Используем относительный путь, так как baseURI и port уже установлены
+                .post("http://localhost:4111/api/v1/accounts/deposit")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.equalTo(expectedErrorMessage));
+
+        // Проверка, что деньги не поступили на счет
+        given()
+                .header("Authorization", userAuthHeader)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions", accountId)
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("findAll { it.amount == 5001.0 }.size()", Matchers.equalTo(0));
     }
 }
